@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent i1 = new Intent(getApplicationContext(), TemplateActivity.class );
                 i1.putExtra( "template", "templateone" );
                 i1.putExtra("path", path_xlsx);
-                i1.putExtra("entries",entries.getText());
+                i1.putExtra("entries",entries.getText().toString());
                 startActivity(i1);
             }
         } );

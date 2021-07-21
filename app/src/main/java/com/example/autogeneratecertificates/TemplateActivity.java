@@ -31,8 +31,8 @@ public class TemplateActivity extends AppCompatActivity {
     String[] c=new String[30];
     String[] d=new String[30];
     String[] e=new String[30];
-    int row_num;
-    String rows;
+    double row_num=0.0;
+    String rows="0.0";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +40,14 @@ public class TemplateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_template);
         test = (TextView) findViewById(R.id.test);
         searchSlideAsync();
+        rows="5";
+        row_num=5;
+        try {
+            rows = getIntent().getStringExtra("entries");
+            row_num = Double.parseDouble(rows);
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
         readExcelData();
     }
 
@@ -53,7 +61,7 @@ public class TemplateActivity extends AppCompatActivity {
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 Iterator<Row> rowIterator = sheet.iterator();
                 int count = 0;
-                while (rowIterator.hasNext() && count < 12) {
+                while (rowIterator.hasNext() && count < row_num+1) {
                     Row row = rowIterator.next();
                     Iterator<Cell> c = row.cellIterator();
                     test.post(() -> test.setText(c.next().getStringCellValue()));
