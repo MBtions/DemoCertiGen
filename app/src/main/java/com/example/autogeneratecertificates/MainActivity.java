@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         templateone = findViewById( R.id.templateone );
         browse=findViewById(R.id.browse);
         entries=findViewById(R.id.entries);
+        getFilesDir();
 
         templateone.setOnClickListener( new View.OnClickListener() {
             @Override

@@ -15,10 +15,12 @@ import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFSlideLayout;
+import org.apache.poi.xslf.usermodel.XSLFSlideMaster;
 import org.apache.poi.xslf.usermodel.XSLFTextBox;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -49,7 +51,6 @@ public class TemplateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_template);
         test = (TextView) findViewById(R.id.test);
-        searchSlideAsync();
         rows="5";
         row_num=5;
         try {
@@ -62,7 +63,6 @@ public class TemplateActivity extends AppCompatActivity {
     }
 
     public void readExcelData() {
-        new Thread(() -> {
             try {
                 String path_xlsx = getIntent().getStringExtra("path");
                 InputStream inputfile = getContentResolver().openInputStream(Uri.parse(path_xlsx));
@@ -72,6 +72,7 @@ public class TemplateActivity extends AppCompatActivity {
                 Iterator<Row> rowIterator = sheet.iterator();
                 int count = 0;
                 String temp;
+
                 while (rowIterator.hasNext() && count < row_num+1) {
                     Row row = rowIterator.next();
                     Iterator<Cell> cx = row.cellIterator();
@@ -93,6 +94,7 @@ public class TemplateActivity extends AppCompatActivity {
                     count++;
                 }
                 inputfile.close();
+                matchColumn();
             } catch (FileNotFoundException e) {
                 test.setText("FilenotFound");
                 e.printStackTrace();
@@ -100,11 +102,9 @@ public class TemplateActivity extends AppCompatActivity {
                 test.setText("IOException");
                 e.printStackTrace();
             }
-        }).start();
-
     }
 
-    public void matchCoulmn() {
+    public void matchColumn() {
         int i;
         switch (a[0].toLowerCase()) {
             case "name":
@@ -133,6 +133,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
                 break;
         }
+
         switch (b[0].toLowerCase()) {
             case "name":
                 for (i = 1; i <= row_num; i++) {
@@ -160,6 +161,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
                 break;
         }
+
         switch (c[0].toLowerCase()) {
             case "name":
                 for (i = 1; i <= row_num; i++) {
@@ -187,6 +189,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
                 break;
         }
+
         switch (d[0].toLowerCase()) {
             case "name":
                 for (i = 1; i <= row_num; i++) {
@@ -214,6 +217,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
                 break;
         }
+
         switch (e[0].toLowerCase()) {
             case "name":
                 for (i = 1; i <= row_num; i++) {
@@ -241,6 +245,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
                 break;
         }
+        //searchSlideAsync();
     }
     private void searchSlideAsync() {
         new Thread(this::searchSlide).start();
@@ -250,14 +255,34 @@ public class TemplateActivity extends AppCompatActivity {
         try {
             AssetManager assManager = getAssets();
             InputStream is = assManager.open("templates.pptx");
-            OutputStream os = new FileOutputStream("output.pptx");
+            Log.e("powerpoint","1"+getFilesDir());
+            OutputStream os = null;
+            File outFile = new File(getFilesDir(), "templates.pptx");
+            outFile.mkdirs();
+            os = new FileOutputStream(outFile);
+            copyFile(is, os);
+            Log.e("powerpoint","2");
             XMLSlideShow ppt = new XMLSlideShow(is);
+            Log.e("powerpoint","3");
             XSLFSlide mainslide = ppt.getSlides().get(0);
 
             for (int i=0; i<row_num; i++){
+                XSLFSlide newSlide = ppt.createSlide();
+                XSLFSlideLayout src_sl = mainslide.getSlideLayout();
+                XSLFSlideMaster src_sm = mainslide.getSlideMaster();
+                XSLFSlideLayout new_sl = newSlide.getSlideLayout();
+                XSLFSlideMaster new_sm = newSlide.getSlideMaster();
+
+                // copy source layout to the new layout
+                new_sl.importContent(src_sl);
+                // copy source master to the new master
+                new_sm.importContent(src_sm);
+                newSlide.importContent(mainslide);
+                /*
                 XSLFSlideLayout layout = mainslide.getSlideLayout();
                 XSLFSlide newSlide = ppt.createSlide(layout);
-                newSlide.importContent(mainslide);
+                newSlide.importContent(mainslide);*/
+                ppt.write(os);
             }
             int count=0;
 
@@ -265,21 +290,24 @@ public class TemplateActivity extends AppCompatActivity {
             for (XSLFSlide slide : slides) {
                 List<XSLFShape> shapes = slide.getShapes();
                 for (XSLFShape shape : shapes) {
-                    if (shape instanceof XSLFTextBox) {
+                    if (count>0 && shape instanceof XSLFTextBox) {
                         String text = ((XSLFTextBox) shape).getText();
-                        text = text.replace("<Name>", name[count] );
-                        text = text.replace("<Course>", course[count] );
-                        text = text.replace("<College>", college[count] );
-                        text = text.replace("<Position>", position[count] );
-                        text = text.replace("<Society>", society[count] );
+                        text = text.replace("<Name>", name[count-1] );
+                        text = text.replace("<Course>", course[count-1] );
+                        text = text.replace("<College>", college[count-1] );
+                        text = text.replace("<Position>", position[count-1] );
+                        text = text.replace("<Society>", society[count-1] );
                         ((XSLFTextBox) shape).setText(text);
                         ppt.write(os);
                     }
+                    count++;
                 }
+                ppt.write(os);
             }
             Log.d("TemplateActivity", "shapes " + slides.size());
             if(os!=null) {
                 try {
+                    os.flush();
                     os.close();
                     os = null;
                 } catch (IOException e) {
@@ -295,6 +323,14 @@ public class TemplateActivity extends AppCompatActivity {
                 }
         } }catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while((read = in.read(buffer)) != -1){
+            out.write(buffer, 0, read);
         }
     }
 }
