@@ -3,6 +3,7 @@ package com.example.autogeneratecertificates;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,8 @@ import org.apache.poi.xslf.usermodel.XSLFTextBox;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -49,7 +52,6 @@ public class TemplateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_template);
         test = (TextView) findViewById(R.id.test);
-        searchSlideAsync();
         rows="5";
         row_num=5;
         try {
@@ -93,6 +95,8 @@ public class TemplateActivity extends AppCompatActivity {
                     count++;
                 }
                 inputfile.close();
+                matchCoulmn();
+                searchSlide();
             } catch (FileNotFoundException e) {
                 test.setText("FilenotFound");
                 e.printStackTrace();
@@ -101,7 +105,6 @@ public class TemplateActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
-
     }
 
     public void matchCoulmn() {
@@ -249,52 +252,63 @@ public class TemplateActivity extends AppCompatActivity {
     private void searchSlide() {
         try {
             AssetManager assManager = getAssets();
-            InputStream is = assManager.open("templates.pptx");
-            OutputStream os = new FileOutputStream("output.pptx");
-            XMLSlideShow ppt = new XMLSlideShow(is);
-            XSLFSlide mainslide = ppt.getSlides().get(0);
 
             for (int i=0; i<row_num; i++){
-                XSLFSlideLayout layout = mainslide.getSlideLayout();
-                XSLFSlide newSlide = ppt.createSlide(layout);
-                newSlide.importContent(mainslide);
-            }
-            int count=0;
+                InputStream is = assManager.open("templates.pptx");
+                OutputStream newFile = createFile(name[i]);
+                copy(is, newFile);
+                is = assManager.open("templates.pptx");
+                newFile = createStream(name[i]);
+                XMLSlideShow ppt = new XMLSlideShow(is);
+                XSLFSlide slide = ppt.getSlides().get(0);
 
-            List<XSLFSlide> slides=ppt.getSlides();
-            for (XSLFSlide slide : slides) {
                 List<XSLFShape> shapes = slide.getShapes();
                 for (XSLFShape shape : shapes) {
                     if (shape instanceof XSLFTextBox) {
                         String text = ((XSLFTextBox) shape).getText();
-                        text = text.replace("<Name>", name[count] );
-                        text = text.replace("<Course>", course[count] );
-                        text = text.replace("<College>", college[count] );
-                        text = text.replace("<Position>", position[count] );
-                        text = text.replace("<Society>", society[count] );
+                        text = text.replace("<Name>", name[i] );
+                        text = text.replace("<Course>", course[i] );
+                        text = text.replace("<College>", college[i] );
+                        text = text.replace("<Position>", position[i] );
+                        text = text.replace("<Society>", society[i] );
                         ((XSLFTextBox) shape).setText(text);
-                        ppt.write(os);
                     }
                 }
+                ppt.write(newFile);
+                newFile.close();
+                is.close();
             }
-            Log.d("TemplateActivity", "shapes " + slides.size());
-            if(os!=null) {
-                try {
-                    os.close();
-                    os = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if(is!=null){
-                try{
-                    is.close();
-                    is=null;
-                }catch (IOException e){
-                    e.printStackTrace();
-                }
-        } }catch (IOException e) {
+
+            Log.d("TemplateActivity", "Completed");
+        }catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private OutputStream createStream(String name) throws FileNotFoundException {
+        return new FileOutputStream(getExternalCacheDir() + "/"+name+".pptx");
+    }
+
+    private OutputStream createFile(String name) throws IOException {
+        File f = new File(getExternalCacheDir() + "/"+name+".pptx");
+        if (f.exists()){
+            f.delete();
+        }
+        if (!f.getParentFile().exists()){
+            f.getParentFile().mkdirs();
+        }
+        f.createNewFile();
+        OutputStream newFile = new FileOutputStream(f);
+        return newFile;
+    }
+
+    public static void copy(InputStream fis, OutputStream fos)
+            throws IOException
+    {
+        byte[] buffer = new byte[1024];
+        int read;
+        while((read = fis.read(buffer)) != -1){
+            fos.write(buffer, 0, read);
         }
     }
 }
