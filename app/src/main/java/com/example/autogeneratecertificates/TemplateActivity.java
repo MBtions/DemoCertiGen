@@ -1,6 +1,5 @@
 package com.example.autogeneratecertificates;
 
-import android.content.Context;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
