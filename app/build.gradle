@@ -41,5 +41,7 @@ dependencies {
     implementation "com.github.SUPERCILEX.poi-android:poi:3.17"
     implementation "com.github.SUPERCILEX.poi-android:proguard:3.17"
     compileOnly "org.apache.poi:poi-ooxml:3.17"
-    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.tom-roush:pdfbox-android:2.0.0.0'
+    implementation 'androidx.multidex:multidex:1.0.3'
+
 }

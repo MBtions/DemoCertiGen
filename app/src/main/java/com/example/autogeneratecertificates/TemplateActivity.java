@@ -1,34 +1,37 @@
 package com.example.autogeneratecertificates;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.pdmodel.PDPageContentStream;
+import com.tom_roush.pdfbox.pdmodel.PDPageTree;
+import com.tom_roush.pdfbox.pdmodel.common.PDStream;
+import com.tom_roush.pdfbox.pdmodel.font.PDType1Font;
+import com.tom_roush.pdfbox.util.Matrix;
+import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFShape;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFSlideLayout;
-import org.apache.poi.xslf.usermodel.XSLFTextBox;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.List;
+
 
 public class TemplateActivity extends AppCompatActivity {
 
@@ -44,23 +47,20 @@ public class TemplateActivity extends AppCompatActivity {
     String[] position=new String[30];
     String[] society=new String[30];
 
-    double row_num=0.0;
-    String rows="0.0";
+    int row_num;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_template);
         test = (TextView) findViewById(R.id.test);
-        rows="5";
-        row_num=5;
         try {
-            rows = getIntent().getStringExtra("entries");
-            row_num = Double.parseDouble(rows);
+            row_num = Integer.parseInt(getIntent().getStringExtra("entries"));
         }catch (NullPointerException e){
             e.printStackTrace();
         }
         readExcelData();
+        test.setText("Certificate Generation Completed!");
     }
 
     public void readExcelData() {
@@ -68,7 +68,6 @@ public class TemplateActivity extends AppCompatActivity {
             try {
                 String path_xlsx = getIntent().getStringExtra("path");
                 InputStream inputfile = getContentResolver().openInputStream(Uri.parse(path_xlsx));
-
                 XSSFWorkbook workbook = new XSSFWorkbook(inputfile);
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 Iterator<Row> rowIterator = sheet.iterator();
@@ -95,7 +94,7 @@ public class TemplateActivity extends AppCompatActivity {
                     count++;
                 }
                 inputfile.close();
-                matchCoulmn();
+                matchColumn();
                 searchSlide();
             } catch (FileNotFoundException e) {
                 test.setText("FilenotFound");
@@ -107,7 +106,7 @@ public class TemplateActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void matchCoulmn() {
+    public void matchColumn() {
         int i;
         switch (a[0].toLowerCase()) {
             case "name":
@@ -245,37 +244,44 @@ public class TemplateActivity extends AppCompatActivity {
                 break;
         }
     }
-    private void searchSlideAsync() {
-        new Thread(this::searchSlide).start();
-    }
 
     private void searchSlide() {
         try {
+            PDFBoxResourceLoader.init(getApplicationContext());
+            String encoding = "ISO-8859-1";
             AssetManager assManager = getAssets();
 
             for (int i=0; i<row_num; i++){
-                InputStream is = assManager.open("templates.pptx");
-                OutputStream newFile = createFile(name[i]);
-                copy(is, newFile);
-                is = assManager.open("templates.pptx");
-                newFile = createStream(name[i]);
-                XMLSlideShow ppt = new XMLSlideShow(is);
-                XSLFSlide slide = ppt.getSlides().get(0);
+                InputStream is = assManager.open("template1.pdf");
+                OutputStream newPDFfile = createFile(name[i]);
+                copy(is, newPDFfile);
+                File PDFfile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +name[i]+".pdf");
+                PDDocument pdf = PDDocument.load(PDFfile);
 
-                List<XSLFShape> shapes = slide.getShapes();
-                for (XSLFShape shape : shapes) {
-                    if (shape instanceof XSLFTextBox) {
-                        String text = ((XSLFTextBox) shape).getText();
-                        text = text.replace("<Name>", name[i] );
-                        text = text.replace("<Course>", course[i] );
-                        text = text.replace("<College>", college[i] );
-                        text = text.replace("<Position>", position[i] );
-                        text = text.replace("<Society>", society[i] );
-                        ((XSLFTextBox) shape).setText(text);
-                    }
-                }
-                ppt.write(newFile);
-                newFile.close();
+                PDPage page = pdf.getPage(0);
+                PDPageContentStream contentStream = new PDPageContentStream(pdf, page,PDPageContentStream.AppendMode.APPEND,true,true);
+                contentStream.beginText();
+                //contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 150);
+                contentStream.newLineAtOffset(1400, 1100);
+                contentStream.showText(name[i]);
+                contentStream.endText();
+                contentStream.beginText();
+                //contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
+                contentStream.newLineAtOffset(1150, 1400);
+                contentStream.showText("from "+college[i]+" has secured");
+                contentStream.endText();
+                contentStream.beginText();
+                //contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
+                contentStream.newLineAtOffset(1150, 1520);
+                contentStream.showText(position[i]+" position in "+society[i]+".");
+                contentStream.endText();
+                contentStream.close();
+                pdf.save(PDFfile);
+                pdf.close();
+                newPDFfile.close();
                 is.close();
             }
 
@@ -285,12 +291,8 @@ public class TemplateActivity extends AppCompatActivity {
         }
     }
 
-    private OutputStream createStream(String name) throws FileNotFoundException {
-        return new FileOutputStream(getExternalCacheDir() + "/"+name+".pptx");
-    }
-
     private OutputStream createFile(String name) throws IOException {
-        File f = new File(getExternalCacheDir() + "/"+name+".pptx");
+        File f = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +name+".pdf");
         if (f.exists()){
             f.delete();
         }
