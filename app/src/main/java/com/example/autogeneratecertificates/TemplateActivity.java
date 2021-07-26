@@ -6,14 +6,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.pdmodel.PDPage;
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream;
-import com.tom_roush.pdfbox.pdmodel.PDPageTree;
-import com.tom_roush.pdfbox.pdmodel.common.PDStream;
 import com.tom_roush.pdfbox.pdmodel.font.PDType1Font;
 import com.tom_roush.pdfbox.util.Matrix;
 import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
@@ -35,16 +34,8 @@ import java.util.Iterator;
 public class TemplateActivity extends AppCompatActivity {
 
     TextView test;
-    String[] a=new String[30];
-    String[] b=new String[30];
-    String[] c=new String[30];
-    String[] d=new String[30];
-    String[] e=new String[30];
-    String[] name=new String[30];
-    String[] course=new String[30];
-    String[] college=new String[30];
-    String[] position=new String[30];
-    String[] society=new String[30];
+    String[][] exceldata = new String[30][30];
+    int name,college,course,position,society;
 
     int row_num;
 
@@ -75,26 +66,16 @@ public class TemplateActivity extends AppCompatActivity {
                 while (rowIterator.hasNext() && count < row_num+1) {
                     Row row = rowIterator.next();
                     Iterator<Cell> cx = row.cellIterator();
-                    temp=cx.next().getStringCellValue();
-                    a[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    b[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    c[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    d[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    e[count]=temp;
-
+                    for (int i=0; i<5; i++){
+                        temp=cx.next().getStringCellValue();
+                        exceldata[count][i]=temp;
+                    }
                     count++;
                 }
+
                 inputfile.close();
-                matchColumn();
-                searchSlide();
+                identifyColumn();
+                genPDF();
             } catch (FileNotFoundException e) {
                 test.setText("FilenotFound");
                 e.printStackTrace();
@@ -105,156 +86,40 @@ public class TemplateActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void matchColumn() {
-        int i;
-        switch (a[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = a[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=a[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=a[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=a[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=a[i];
-                }
-                break;
-        }
-        switch (b[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = b[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=b[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=b[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=b[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=b[i];
-                }
-                break;
-        }
-        switch (c[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = c[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=c[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=c[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=c[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=c[i];
-                }
-                break;
-        }
-        switch (d[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = d[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=d[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=d[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=d[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=d[i];
-                }
-                break;
-        }
-        switch (e[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = e[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=e[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=e[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=e[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=e[i];
-                }
-                break;
+    public void identifyColumn(){
+        for (int i=0; i<5; i++){
+            if(exceldata[0][i].toLowerCase().equals("name")){
+                name=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("college")){
+                college=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("course")){
+                course=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("position")){
+                position=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("society")){
+                society=i;
+            }
+            else{
+                //add toast here for error msg ("column name don't match template
+                // add another excel sheet")
+            }
         }
     }
 
-    private void searchSlide() {
+    private void genPDF() {
         try {
             PDFBoxResourceLoader.init(getApplicationContext());
-            String encoding = "ISO-8859-1";
             AssetManager assManager = getAssets();
 
-            for (int i=0; i<row_num; i++){
+            for (int i=1; i<row_num+1; i++){
                 InputStream is = assManager.open("template1.pdf");
-                OutputStream newPDFfile = createFile(name[i]);
+                OutputStream newPDFfile = createFile(exceldata[i][name]);
                 copy(is, newPDFfile);
-                File PDFfile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +name[i]+".pdf");
+                File PDFfile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +exceldata[i][name]+".pdf");
                 PDDocument pdf = PDDocument.load(PDFfile);
 
                 PDPage page = pdf.getPage(0);
@@ -263,19 +128,19 @@ public class TemplateActivity extends AppCompatActivity {
                 contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
                 contentStream.setFont(PDType1Font.TIMES_BOLD, 150);
                 contentStream.newLineAtOffset(1400, -1200);
-                contentStream.showText(name[i]);
+                contentStream.showText(exceldata[i][name]);
                 contentStream.endText();
                 contentStream.beginText();
                 contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
                 contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
                 contentStream.newLineAtOffset(1150, -1400);
-                contentStream.showText("from "+college[i]+" has secured");
+                contentStream.showText("from "+exceldata[i][college]+" has secured");
                 contentStream.endText();
                 contentStream.beginText();
                 contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
                 contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
                 contentStream.newLineAtOffset(1150, -1520);
-                contentStream.showText(position[i]+" position in "+society[i]+".");
+                contentStream.showText(exceldata[i][position]+" position in "+exceldata[i][society]+".");
                 contentStream.endText();
                 contentStream.close();
                 pdf.save(PDFfile);
