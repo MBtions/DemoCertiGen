@@ -61,7 +61,7 @@ public class TemplateActivity extends AppCompatActivity {
         readExcelData();
         test.setText("Certificate Generation Completed!");
 
-        go_to.setOnClickListener( new View.OnClickListener() {
+        /*go_to.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Uri selectedUri = Uri.parse( getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString() );
@@ -80,6 +80,7 @@ public class TemplateActivity extends AppCompatActivity {
                 }
             }
         } );
+         */
     }
 
     public void readExcelData() {
