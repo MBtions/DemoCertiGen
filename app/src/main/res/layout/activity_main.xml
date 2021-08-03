@@ -24,16 +24,16 @@
         android:id="@+id/entries"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:ems="10"
         android:hint="@string/entries_hint"
-        android:inputType="textPersonName"
+        android:importantForAutofill="no"
+        android:inputType="number"
         android:text=""
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.447"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_enter_rownum"
-        android:importantForAutofill="no" />
+        app:layout_constraintTop_toBottomOf="@+id/text_enter_rownum" />
 
     <ImageView
         android:id="@+id/sheets_img"

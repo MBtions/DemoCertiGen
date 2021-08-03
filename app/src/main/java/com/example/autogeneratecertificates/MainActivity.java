@@ -5,10 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity {
@@ -27,7 +29,13 @@ public class MainActivity extends AppCompatActivity {
         browse.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getPath();
+                if (TextUtils.isEmpty(entries.getText())) {
+                    //Toast.makeText( getApplicationContext(), "Number of Certificates reqquired" ).show();
+                    entries.setError(" Please Enter Number of Certificates ");
+                    entries.requestFocus();
+                } else {
+                    getPath();
+                }
             }
         } );
     }
@@ -36,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         String[] mimeTypes = {"application/vnd.ms-excel" , "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"};
         i.setType("*/*");
-        //i.addCategory(Intent.CATEGORY_OPENABLE);
         i.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
         startActivityForResult(i, 1);
     }

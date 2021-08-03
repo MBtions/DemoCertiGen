@@ -47,7 +47,7 @@ public class ScrollSelectActivity extends AppCompatActivity {
         Intent i = new Intent(this, AdditionalInfo.class);
         i.putExtra("template", template);
         i.putExtra("path", getIntent().getStringExtra( "path" ));
-        i.putExtra( "entries", getIntent().getStringExtra( "entries" ) );
+        i.putExtra( "entries", getIntent().getStringExtra( "entries" ));
         startActivity( i );
     }
 }
