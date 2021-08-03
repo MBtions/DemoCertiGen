@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp"
         tools:context=".ScrollSelectActivity">
@@ -32,6 +32,7 @@
             android:id="@+id/t1_img"
             android:layout_width="407dp"
             android:layout_height="346dp"
+            android:contentDescription="@string/template_img_cd"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView"
@@ -42,6 +43,7 @@
             android:layout_width="407dp"
             android:layout_height="346dp"
             android:layout_marginTop="8dp"
+            android:contentDescription="@string/template_img_cd"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.6"
             app:layout_constraintStart_toStartOf="parent"
