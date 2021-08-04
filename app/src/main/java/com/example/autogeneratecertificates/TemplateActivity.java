@@ -10,57 +10,47 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.pdmodel.PDPageContentStream;
+import com.tom_roush.pdfbox.pdmodel.font.PDType1Font;
+import com.tom_roush.pdfbox.util.Matrix;
+import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFShape;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFSlideLayout;
-import org.apache.poi.xslf.usermodel.XSLFTextBox;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.List;
+
 
 public class TemplateActivity extends AppCompatActivity {
 
     TextView test;
-    String[] a=new String[30];
-    String[] b=new String[30];
-    String[] c=new String[30];
-    String[] d=new String[30];
-    String[] e=new String[30];
-    String[] name=new String[30];
-    String[] course=new String[30];
-    String[] college=new String[30];
-    String[] position=new String[30];
-    String[] society=new String[30];
+    String[][] exceldata = new String[30][30];
+    int name,college,course,position,society;
 
-    double row_num=0.0;
-    String rows="0.0";
+    int row_num;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_template);
         test = (TextView) findViewById(R.id.test);
-        rows="5";
-        row_num=5;
         try {
-            rows = getIntent().getStringExtra("entries");
-            row_num = Double.parseDouble(rows);
+            row_num = Integer.parseInt(getIntent().getStringExtra("entries"));
         }catch (NullPointerException e){
             e.printStackTrace();
         }
         readExcelData();
+        test.setText("Certificate Generation Completed!");
     }
 
     public void readExcelData() {
@@ -68,7 +58,6 @@ public class TemplateActivity extends AppCompatActivity {
             try {
                 String path_xlsx = getIntent().getStringExtra("path");
                 InputStream inputfile = getContentResolver().openInputStream(Uri.parse(path_xlsx));
-
                 XSSFWorkbook workbook = new XSSFWorkbook(inputfile);
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 Iterator<Row> rowIterator = sheet.iterator();
@@ -77,26 +66,16 @@ public class TemplateActivity extends AppCompatActivity {
                 while (rowIterator.hasNext() && count < row_num+1) {
                     Row row = rowIterator.next();
                     Iterator<Cell> cx = row.cellIterator();
-                    temp=cx.next().getStringCellValue();
-                    a[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    b[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    c[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    d[count]=temp;
-
-                    temp=cx.next().getStringCellValue();
-                    e[count]=temp;
-
+                    for (int i=0; i<5; i++){
+                        temp=cx.next().getStringCellValue();
+                        exceldata[count][i]=temp;
+                    }
                     count++;
                 }
+
                 inputfile.close();
-                matchCoulmn();
-                searchSlide();
+                identifyColumn();
+                genPDF();
             } catch (FileNotFoundException e) {
                 test.setText("FilenotFound");
                 e.printStackTrace();
@@ -107,175 +86,66 @@ public class TemplateActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void matchCoulmn() {
-        int i;
-        switch (a[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = a[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=a[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=a[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=a[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=a[i];
-                }
-                break;
+    public void identifyColumn(){
+        for (int i=0; i<5; i++){
+            if(exceldata[0][i].toLowerCase().equals("name")){
+                name=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("college")){
+                college=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("course")){
+                course=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("position")){
+                position=i;
+            }
+            else if(exceldata[0][i].toLowerCase().equals("society")){
+                society=i;
+            }
+            else{
+                //add toast here for error msg ("column name don't match template
+                // add another excel sheet")
+            }
         }
-        switch (b[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = b[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=b[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=b[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=b[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=b[i];
-                }
-                break;
-        }
-        switch (c[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = c[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=c[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=c[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=c[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=c[i];
-                }
-                break;
-        }
-        switch (d[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = d[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=d[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=d[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=d[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=d[i];
-                }
-                break;
-        }
-        switch (e[0].toLowerCase()) {
-            case "name":
-                for (i = 1; i <= row_num; i++) {
-                    name[i-1] = e[i];
-                }
-                break;
-            case "college":
-                for (i=1; i<=row_num; i++){
-                    college[i-1]=e[i];
-                }
-                break;
-            case "course":
-                for (i=1; i<=row_num; i++){
-                    course[i-1]=e[i];
-                }
-                break;
-            case "society":
-                for (i=1; i<=row_num; i++){
-                    society[i-1]=e[i];
-                }
-                break;
-            case "position":
-                for (i=1; i<=row_num; i++){
-                    position[i-1]=e[i];
-                }
-                break;
-        }
-    }
-    private void searchSlideAsync() {
-        new Thread(this::searchSlide).start();
     }
 
-    private void searchSlide() {
+    private void genPDF() {
         try {
+            PDFBoxResourceLoader.init(getApplicationContext());
             AssetManager assManager = getAssets();
 
-            for (int i=0; i<row_num; i++){
-                InputStream is = assManager.open("templates.pptx");
-                OutputStream newFile = createFile(name[i]);
-                copy(is, newFile);
-                is = assManager.open("templates.pptx");
-                newFile = createStream(name[i]);
-                XMLSlideShow ppt = new XMLSlideShow(is);
-                XSLFSlide slide = ppt.getSlides().get(0);
+            for (int i=1; i<row_num+1; i++){
+                InputStream is = assManager.open("template1.pdf");
+                OutputStream newPDFfile = createFile(exceldata[i][name]);
+                copy(is, newPDFfile);
+                File PDFfile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +exceldata[i][name]+".pdf");
+                PDDocument pdf = PDDocument.load(PDFfile);
 
-                List<XSLFShape> shapes = slide.getShapes();
-                for (XSLFShape shape : shapes) {
-                    if (shape instanceof XSLFTextBox) {
-                        String text = ((XSLFTextBox) shape).getText();
-                        text = text.replace("<Name>", name[i] );
-                        text = text.replace("<Course>", course[i] );
-                        text = text.replace("<College>", college[i] );
-                        text = text.replace("<Position>", position[i] );
-                        text = text.replace("<Society>", society[i] );
-                        ((XSLFTextBox) shape).setText(text);
-                    }
-                }
-                ppt.write(newFile);
-                newFile.close();
+                PDPage page = pdf.getPage(0);
+                PDPageContentStream contentStream = new PDPageContentStream(pdf, page,true,false);
+                contentStream.beginText();
+                contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 150);
+                contentStream.newLineAtOffset(1400, -1200);
+                contentStream.showText(exceldata[i][name]);
+                contentStream.endText();
+                contentStream.beginText();
+                contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
+                contentStream.newLineAtOffset(1150, -1400);
+                contentStream.showText("from "+exceldata[i][college]+" has secured");
+                contentStream.endText();
+                contentStream.beginText();
+                contentStream.setTextMatrix(new Matrix(1f, 0f, 0f, -1f, 0f, 0f));
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 120);
+                contentStream.newLineAtOffset(1150, -1520);
+                contentStream.showText(exceldata[i][position]+" position in "+exceldata[i][society]+".");
+                contentStream.endText();
+                contentStream.close();
+                pdf.save(PDFfile);
+                pdf.close();
+                newPDFfile.close();
                 is.close();
             }
 
@@ -285,12 +155,8 @@ public class TemplateActivity extends AppCompatActivity {
         }
     }
 
-    private OutputStream createStream(String name) throws FileNotFoundException {
-        return new FileOutputStream(getExternalCacheDir() + "/"+name+".pptx");
-    }
-
     private OutputStream createFile(String name) throws IOException {
-        File f = new File(getExternalCacheDir() + "/"+name+".pptx");
+        File f = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)+"/AutoCertiGen/" +name+".pdf");
         if (f.exists()){
             f.delete();
         }
